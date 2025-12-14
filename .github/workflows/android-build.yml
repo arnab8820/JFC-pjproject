@@ -1,0 +1,38 @@
+name: CI Android
+on:
+  push:
+    branches:
+      - 'v2.15.1'
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  build-android:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up JDK
+      uses: actions/setup-java@v4
+      with:
+        java-version: '11'
+        distribution: 'temurin'
+    - name: Setup Android NDK
+      uses: android/setup-ndk@v1
+      with:
+        ndk-version: r25b
+    - name: Configure for Android
+      run: |
+        export ANDROID_NDK_ROOT=$ANDROID_NDK_HOME
+        ./configure-android --disable-video --disable-opencore-amr
+    - name: Make
+      run: make
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: android-libs
+        path: |
+          pjlib/lib/
+          pjmedia/lib/
+          pjnath/lib/
+          pjsip/lib/
+          pjlib-util/lib/
