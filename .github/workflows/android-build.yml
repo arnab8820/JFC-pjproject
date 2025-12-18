@@ -51,9 +51,9 @@ jobs:
 
       - name: Build native libraries
         run: |
-          make dep
           make clean
-          make -j$(nproc)
+          make dep
+          make
 
       - name: 📁 List Native Outputs
         run: find . -name "*.so" -o -name "*.a"
@@ -63,8 +63,9 @@ jobs:
         with:
           name: pjsip-android-arm64-api26
           path: |
-            pjlib/build/output
-            pjlib-util/build/output
-            pjmedia/build/output
-            pjnath/build/output
-            pjsip/build/output
+            ./pjnath/lib/*.a
+            ./third_party/lib/*.a
+            ./pjmedia/lib/*.a
+            ./pjsip/lib/*.a
+            ./pjlib/lib/*.a
+            ./pjlib-util/lib/*.a
