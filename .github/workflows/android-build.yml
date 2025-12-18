@@ -8,31 +8,58 @@ on:
 
 jobs:
   build-android:
+    name: Build Android (NDK)
     runs-on: ubuntu-latest
+
+    env:
+      ANDROID_SDK_ROOT: ${{ runner.tool_cache }}/android-sdk
+      ANDROID_NDK_ROOT: ${{ runner.tool_cache }}/android-ndk
+
     steps:
-    - uses: actions/checkout@v4
-    - name: Set up JDK
-      uses: actions/setup-java@v4
-      with:
-        java-version: '11'
-        distribution: 'temurin'
-    - name: Setup Android NDK
-      uses: android/setup-ndk@v1
-      with:
-        ndk-version: r25b
-    - name: Configure for Android
-      run: |
-        export ANDROID_NDK_ROOT=$ANDROID_NDK_HOME
-        ./configure-android --disable-video --disable-opencore-amr
-    - name: Make
-      run: make
-    - name: Upload artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: android-libs
-        path: |
-          pjlib/lib/
-          pjmedia/lib/
-          pjnath/lib/
-          pjsip/lib/
-          pjlib-util/lib/
+      - name: 🔁 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🧰 Install Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: 📥 Download Android SDK & Tools
+        run: |
+          mkdir -p $ANDROID_SDK_ROOT
+          yes | sudo $ANDROID_SDK_ROOT/cmdline-tools/bin/sdkmanager --sdk_root=${ANDROID_SDK_ROOT} "platform-tools" "platforms;android-33" "ndk;25.2.9519653" "cmake;3.22.1"
+        shell: bash
+
+      - name: 📌 Add SDK & NDK to PATH
+        run: |
+          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
+          echo "ANDROID_NDK_ROOT=$ANDROID_SDK_ROOT/ndk/25.2.9519653" >> $GITHUB_ENV
+          echo "$ANDROID_SDK_ROOT/platform-tools" >> $GITHUB_PATH
+          echo "$ANDROID_NDK_ROOT" >> $GITHUB_PATH
+
+      - name: 🧱 Make build scripts executable
+        run: |
+          chmod +x configure-android
+          chmod +x build/build* || true
+
+      - name: 📐 Configure for Android
+        run: |
+          ./configure-android --use-ndk=$ANDROID_NDK_ROOT --with-samples=no
+
+      - name: 🏗️ Build Native
+        run: |
+          make dep && make clean && make
+        env:
+          NDK_ROOT: $ANDROID_NDK_ROOT
+
+      - name: 📁 List Native Outputs
+        run: find . -name "*.so" -o -name "*.a"
+
+      - name: 📦 Upload Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: android-native-libs
+          path: |
+            **/*.so
+            **/*.a
