@@ -63,8 +63,8 @@ jobs:
         with:
           name: pjsip-android-arm64-api26
           path: |
-            pjlib/build/output/**/libpj.a
-            pjlib-util/build/output/**/libpjlib-util.a
-            pjmedia/build/output/**/libpjmedia*.a
-            pjnath/build/output/**/libpjnath.a
-            pjsip/build/output/**/libpjsip*.a
+            pjlib/build/output
+            pjlib-util/build/output
+            pjmedia/build/output
+            pjnath/build/output
+            pjsip/build/output
